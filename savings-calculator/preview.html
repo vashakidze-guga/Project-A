@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>EPOS Savings Calculator — Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+:root {
+  --color-primary: #4F46E5;
+  --color-primary-light: #6366F1;
+  --color-primary-dark: #3730A3;
+  --color-bg: #F9FAFB;
+  --color-surface: #FFFFFF;
+  --color-text: #111827;
+  --color-text-secondary: #6B7280;
+  --color-text-muted: #9CA3AF;
+  --color-border: #E5E7EB;
+  --color-track: #E5E7EB;
+  --color-success: #059669;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 25px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.03);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--color-bg);color:var(--color-text);-webkit-font-smoothing:antialiased;line-height:1.5}
+.calculator-wrapper{max-width:1120px;margin:0 auto;padding:40px 24px 60px}
+.calculator-header{text-align:center;margin-bottom:40px}
+.calculator-headline{font-size:2rem;font-weight:800;color:var(--color-text);line-height:1.2;margin-bottom:8px}
+.calculator-subheadline{font-size:1.1rem;color:var(--color-text-secondary);font-weight:400}
+.calculator-body{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+.input-panel{background:var(--color-surface);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow-md);display:flex;flex-direction:column;gap:28px}
+.section-label{display:block;font-size:.85rem;font-weight:600;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.business-type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.business-type-card{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border:2px solid var(--color-border);border-radius:var(--radius-sm);background:var(--color-surface);cursor:pointer;transition:all .2s ease;font-family:inherit}
+.business-type-card:hover{border-color:var(--color-primary-light);background:#F5F3FF}
+.business-type-card.active{border-color:var(--color-primary);background:#EEF2FF;box-shadow:0 0 0 1px var(--color-primary)}
+.business-type-icon{font-size:1.4rem}
+.business-type-label{font-size:.72rem;font-weight:500;color:var(--color-text-secondary);text-align:center;line-height:1.2}
+.business-type-card.active .business-type-label{color:var(--color-primary-dark);font-weight:600}
+.slider-group{display:flex;flex-direction:column;gap:8px}
+.slider-header{display:flex;justify-content:space-between;align-items:baseline}
+.slider-label{font-size:.9rem;font-weight:600;color:var(--color-text)}
+.slider-value{font-size:1.1rem;font-weight:700;color:var(--color-primary)}
+.styled-slider{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:4px;outline:none;cursor:pointer}
+.styled-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--color-primary);cursor:pointer;border:3px solid var(--color-surface);box-shadow:var(--shadow-md);transition:transform .15s ease}
+.styled-slider::-webkit-slider-thumb:hover{transform:scale(1.15)}
+.styled-slider::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--color-primary);cursor:pointer;border:3px solid var(--color-surface);box-shadow:var(--shadow-md)}
+.slider-range{display:flex;justify-content:space-between;font-size:.75rem;color:var(--color-text-muted)}
+.results-panel{background:var(--color-surface);border-radius:var(--radius-lg);padding:28px;box-shadow:var(--shadow-md);display:flex;flex-direction:column;gap:24px}
+.total-savings{text-align:center;padding:20px 0}
+.total-savings-amount{display:block;font-size:2.8rem;font-weight:800;color:var(--color-primary);line-height:1;margin-bottom:6px}
+.total-savings-label{display:block;font-size:1rem;color:var(--color-text-secondary);font-weight:500}
+.revenue-context{text-align:center;font-size:.85rem;color:var(--color-text-muted);margin-top:-16px}
+.breakdown-chart{display:flex;flex-direction:column;gap:12px}
+.breakdown-title{font-size:.85rem;font-weight:600;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.04em}
+.breakdown-bars{display:flex;flex-direction:column;gap:10px}
+.breakdown-row{display:grid;grid-template-columns:160px 1fr 110px;gap:10px;align-items:center}
+.breakdown-label{display:flex;align-items:center;gap:6px;min-width:0}
+.breakdown-emoji{font-size:.95rem;flex-shrink:0}
+.breakdown-name{font-size:.78rem;color:var(--color-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.breakdown-bar-container{height:10px;background:var(--color-bg);border-radius:5px;overflow:hidden}
+.breakdown-bar{height:100%;border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1);min-width:4px}
+.breakdown-amount{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.breakdown-chf{font-size:.8rem;font-weight:600;color:var(--color-text)}
+.breakdown-pct{font-size:.72rem;color:var(--color-text-muted);min-width:28px;text-align:right}
+.context-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.metric-card{background:var(--color-bg);border-radius:var(--radius-sm);padding:14px 12px;text-align:center;display:flex;flex-direction:column;gap:4px}
+.metric-value{font-size:.9rem;font-weight:700;color:var(--color-success)}
+.metric-label{font-size:.72rem;color:var(--color-text-muted);line-height:1.3}
+.credibility-line{font-size:.72rem;color:var(--color-text-muted);text-align:center;line-height:1.5;border-top:1px solid var(--color-border);padding-top:16px}
+.cta-section{display:flex;justify-content:center;align-items:center;gap:16px;margin-top:40px;flex-wrap:wrap}
+.cta-primary{padding:14px 36px;font-size:1rem;font-weight:700;color:#FFF;background:var(--color-primary);border:none;border-radius:var(--radius-sm);cursor:pointer;transition:all .2s ease;font-family:inherit;box-shadow:var(--shadow-md)}
+.cta-primary:hover{background:var(--color-primary-dark);box-shadow:var(--shadow-lg);transform:translateY(-1px)}
+.cta-secondary{padding:14px 36px;font-size:1rem;font-weight:600;color:var(--color-primary);background:transparent;border:2px solid var(--color-primary);border-radius:var(--radius-sm);cursor:pointer;transition:all .2s ease;font-family:inherit}
+.cta-secondary:hover{background:#EEF2FF}
+@media(max-width:768px){
+  .calculator-wrapper{padding:24px 16px 40px}
+  .calculator-headline{font-size:1.5rem}
+  .calculator-subheadline{font-size:.95rem}
+  .calculator-body{grid-template-columns:1fr;gap:24px}
+  .business-type-grid{grid-template-columns:repeat(3,1fr);gap:6px}
+  .business-type-card{padding:10px 4px}
+  .business-type-icon{font-size:1.2rem}
+  .business-type-label{font-size:.65rem}
+  .total-savings-amount{font-size:2.2rem}
+  .breakdown-row{grid-template-columns:120px 1fr 90px;gap:6px}
+  .breakdown-name{font-size:.7rem}
+  .breakdown-chf{font-size:.72rem}
+  .context-metrics{grid-template-columns:1fr;gap:8px}
+  .metric-card{flex-direction:row;justify-content:space-between;align-items:center;text-align:left}
+  .cta-section{flex-direction:column;margin-top:28px}
+  .cta-primary,.cta-secondary{width:100%;text-align:center}
+}
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script type="text/babel">
+const { useState, useMemo, useCallback, useEffect, useRef } = React;
+
+// ===== CONFIG =====
+const CONFIG = {
+  operating_days: 300,
+  hourly_wage: 28,
+  working_weeks_per_year: 50,
+  comp_void_rate: 0.003,
+  comp_void_reduction: 0.30,
+  error_reduction_factor: 0.20,
+  upsell_margin_rate: 0.65,
+  menu_insight_pct: 0.003,
+  menu_insight_margin: 0.70,
+  spoilage_rate: 0.04,
+  spoilage_reduction: 0.15,
+  purchasing_loss_rate: 0.02,
+  purchasing_reduction: 0.15,
+  portion_loss_rate: 0.01,
+  portion_reduction: 0.10,
+  daily_minutes_saved_per_staff: 10,
+  admin_hours_saved_per_week: 2,
+  billing_error_rate: 0.002,
+  billing_reduction: 0.50,
+  checkout_time_saving_pct: 0.001,
+  assumed_epos_annual_cost: 2400,
+  assumed_base_profit_margin: 0.05,
+  large_revenue_threshold: 5000000,
+  capped_upsell_pct: 0.008,
+  capped_table_turn_pct: 0.006,
+  rounding: 100,
+};
+
+// ===== PRESETS =====
+const PRESETS = {
+  restaurant:       { label:'Restaurant',           icon:'\u{1F37D}\uFE0F', avg_bill:85,  table_turns:2,   services_per_day:2, food_cost_pct:0.30, staff_per_20_tables:6, admin_hours_week:12, upsell_pct:0.012, table_turn_improvement:0.010, order_error_rate:0.008 },
+  cafe:             { label:'Caf\u00e9 / Coffee Shop', icon:'\u2615',       avg_bill:18,  table_turns:3.5, services_per_day:2, food_cost_pct:0.28, staff_per_20_tables:3, admin_hours_week:8,  upsell_pct:0.008, table_turn_improvement:0.008, order_error_rate:0.005 },
+  bar:              { label:'Bar / Nightclub',       icon:'\u{1F377}',      avg_bill:45,  table_turns:4,   services_per_day:1, food_cost_pct:0.22, staff_per_20_tables:5, admin_hours_week:10, upsell_pct:0.015, table_turn_improvement:0.005, order_error_rate:0.010 },
+  fast_casual:      { label:'Fast-Casual / Takeaway',icon:'\u{1F6CD}\uFE0F',avg_bill:22, table_turns:6,   services_per_day:2, food_cost_pct:0.32, staff_per_20_tables:4, admin_hours_week:8,  upsell_pct:0.010, table_turn_improvement:0.012, order_error_rate:0.006 },
+  hotel_restaurant: { label:'Hotel Restaurant',      icon:'\u{1F3E8}',      avg_bill:120, table_turns:1.5, services_per_day:2, food_cost_pct:0.30, staff_per_20_tables:8, admin_hours_week:15, upsell_pct:0.012, table_turn_improvement:0.008, order_error_rate:0.008 },
+  bakery:           { label:'Bakery / Patisserie',   icon:'\u{1F35E}',      avg_bill:12,  table_turns:5,   services_per_day:2, food_cost_pct:0.35, staff_per_20_tables:2, admin_hours_week:6,  upsell_pct:0.005, table_turn_improvement:0.010, order_error_rate:0.003 },
+};
+const BUSINESS_TYPES = Object.keys(PRESETS);
+
+// ===== FORMATTING =====
+function formatCHF(v) { return `CHF ${Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g,"'")}`; }
+function formatNumber(v) { return Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g,"'"); }
+
+// ===== CALCULATIONS =====
+function calculateRevenue(tables, avgBill, tableTurns, servicesPerDay) {
+  return tables * avgBill * tableTurns * servicesPerDay * CONFIG.operating_days;
+}
+function getEffectiveRates(annualRevenue, preset) {
+  const isLarge = annualRevenue > CONFIG.large_revenue_threshold;
+  return {
+    upsell_pct: isLarge ? Math.min(preset.upsell_pct, CONFIG.capped_upsell_pct) : preset.upsell_pct,
+    table_turn_improvement: isLarge ? Math.min(preset.table_turn_improvement, CONFIG.capped_table_turn_pct) : preset.table_turn_improvement,
+  };
+}
+function calcOrderAccuracy(r, p) { return r*p.order_error_rate*CONFIG.error_reduction_factor + r*CONFIG.comp_void_rate*CONFIG.comp_void_reduction; }
+function calcTableTurnover(r, p) { const e=getEffectiveRates(r,p); return r*e.table_turn_improvement*(1-p.food_cost_pct); }
+function calcUpselling(r, p) { const e=getEffectiveRates(r,p); return r*e.upsell_pct*CONFIG.upsell_margin_rate + r*CONFIG.menu_insight_pct*CONFIG.menu_insight_margin; }
+function calcFoodWaste(r, p) {
+  if(p.food_cost_pct===0) return 0;
+  const fc=r*p.food_cost_pct;
+  return fc*CONFIG.spoilage_rate*CONFIG.spoilage_reduction + fc*CONFIG.purchasing_loss_rate*CONFIG.purchasing_reduction + fc*CONFIG.portion_loss_rate*CONFIG.portion_reduction;
+}
+function calcLaborEfficiency(staff) {
+  return staff*CONFIG.daily_minutes_saved_per_staff*(CONFIG.hourly_wage/60)*CONFIG.operating_days + CONFIG.admin_hours_saved_per_week*CONFIG.hourly_wage*CONFIG.working_weeks_per_year;
+}
+function calcBillingEfficiency(r) { return r*CONFIG.billing_error_rate*CONFIG.billing_reduction + r*CONFIG.checkout_time_saving_pct; }
+
+function calculateAllSavings({tables, avgBill, staff, preset}) {
+  const annualRevenue = calculateRevenue(tables, avgBill, preset.table_turns, preset.services_per_day);
+  const orderAccuracy = calcOrderAccuracy(annualRevenue, preset);
+  const tableTurnover = calcTableTurnover(annualRevenue, preset);
+  const upselling = calcUpselling(annualRevenue, preset);
+  const foodWaste = calcFoodWaste(annualRevenue, preset);
+  const laborEfficiency = calcLaborEfficiency(staff);
+  const billingEfficiency = calcBillingEfficiency(annualRevenue);
+  const rawTotal = orderAccuracy+tableTurnover+upselling+foodWaste+laborEfficiency+billingEfficiency;
+  const totalAnnualSavings = Math.round(rawTotal/CONFIG.rounding)*CONFIG.rounding;
+  return {
+    annualRevenue,
+    breakdown: [
+      {key:'upselling',label:'Upselling & Check Growth',emoji:'\u{1F4C8}',value:upselling},
+      {key:'tableTurnover',label:'Faster Table Turns',emoji:'\u{1F37D}\uFE0F',value:tableTurnover},
+      {key:'laborEfficiency',label:'Labor & Time Savings',emoji:'\u{1F477}',value:laborEfficiency},
+      {key:'foodWaste',label:'Food Waste Reduction',emoji:'\u{1F957}',value:foodWaste},
+      {key:'orderAccuracy',label:'Order Accuracy',emoji:'\u2705',value:orderAccuracy},
+      {key:'billingEfficiency',label:'Billing Efficiency',emoji:'\u{1F4B3}',value:billingEfficiency},
+    ].sort((a,b)=>b.value-a.value),
+    totalAnnualSavings,
+  };
+}
+function autoScaleStaff(tables, preset) { return Math.max(1, Math.round(tables*(preset.staff_per_20_tables/20))); }
+function calculateContextMetrics(total, rev) {
+  const monthly=total/12, daily=total/CONFIG.operating_days;
+  const monthsToROI=CONFIG.assumed_epos_annual_cost/(total/12);
+  const weeksToROI=monthsToROI*4.33;
+  const newMargin=((rev*CONFIG.assumed_base_profit_margin+total)/rev)*100;
+  return {monthlySavings:monthly,dailySavings:daily,monthsToROI,weeksToROI,newMargin};
+}
+
+const CATEGORY_COLORS = {
+  upselling:'#4F46E5', tableTurnover:'#0891B2', laborEfficiency:'#059669',
+  foodWaste:'#D97706', orderAccuracy:'#7C3AED', billingEfficiency:'#DC2626',
+};
+
+// ===== ANIMATED NUMBER HOOK =====
+function useAnimatedNumber(target, duration=600) {
+  const [display, setDisplay] = useState(target);
+  const rafRef = useRef(null);
+  const startRef = useRef(null);
+  const fromRef = useRef(target);
+  useEffect(()=>{
+    const from=fromRef.current, diff=target-from;
+    if(diff===0) return;
+    startRef.current=null;
+    const animate=(ts)=>{
+      if(!startRef.current) startRef.current=ts;
+      const progress=Math.min((ts-startRef.current)/duration,1);
+      const eased=1-Math.pow(1-progress,3);
+      setDisplay(Math.round(from+diff*eased));
+      if(progress<1) rafRef.current=requestAnimationFrame(animate);
+      else fromRef.current=target;
+    };
+    rafRef.current=requestAnimationFrame(animate);
+    return ()=>{if(rafRef.current) cancelAnimationFrame(rafRef.current)};
+  },[target,duration]);
+  useEffect(()=>{fromRef.current=display});
+  return display;
+}
+
+// ===== SLIDER =====
+function Slider({label, value, min, max, step, unit, onChange}) {
+  const pct=((value-min)/(max-min))*100;
+  return (
+    <div className="slider-group">
+      <div className="slider-header">
+        <label className="slider-label">{label}</label>
+        <span className="slider-value">{unit==='CHF'?`CHF ${formatNumber(value)}`:value}</span>
+      </div>
+      <input type="range" className="styled-slider" min={min} max={max} step={step||1} value={value}
+        onChange={e=>onChange(Number(e.target.value))}
+        style={{background:`linear-gradient(to right,var(--color-primary) 0%,var(--color-primary) ${pct}%,var(--color-track) ${pct}%,var(--color-track) 100%)`}} />
+      <div className="slider-range">
+        <span>{unit==='CHF'?`CHF ${min}`:min}</span>
+        <span>{unit==='CHF'?`CHF ${max}`:max}</span>
+      </div>
+    </div>
+  );
+}
+
+// ===== INPUT PANEL =====
+function InputPanel({businessType, tables, avgBill, staff, onBusinessTypeChange, onTablesChange, onAvgBillChange, onStaffChange}) {
+  return (
+    <div className="input-panel">
+      <div className="business-type-section">
+        <label className="section-label">Business Type</label>
+        <div className="business-type-grid">
+          {BUSINESS_TYPES.map(key=>(
+            <button key={key} className={`business-type-card ${businessType===key?'active':''}`} onClick={()=>onBusinessTypeChange(key)}>
+              <span className="business-type-icon">{PRESETS[key].icon}</span>
+              <span className="business-type-label">{PRESETS[key].label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+      <Slider label="Number of Tables" value={tables} min={3} max={80} onChange={onTablesChange} />
+      <Slider label="Average Bill per Table" value={avgBill} min={10} max={500} step={5} unit="CHF" onChange={onAvgBillChange} />
+      <Slider label="Number of Staff" value={staff} min={1} max={30} onChange={onStaffChange} />
+    </div>
+  );
+}
+
+// ===== BREAKDOWN CHART =====
+function BreakdownChart({breakdown, totalAnnualSavings}) {
+  const visible=breakdown.filter(i=>i.value>0);
+  if(!visible.length) return null;
+  const maxVal=visible[0]?.value||1;
+  return (
+    <div className="breakdown-chart">
+      <h3 className="breakdown-title">Savings Breakdown</h3>
+      <div className="breakdown-bars">
+        {visible.map(item=>{
+          const pct=(item.value/totalAnnualSavings)*100;
+          const barW=(item.value/maxVal)*100;
+          return (
+            <div key={item.key} className="breakdown-row">
+              <div className="breakdown-label">
+                <span className="breakdown-emoji">{item.emoji}</span>
+                <span className="breakdown-name">{item.label}</span>
+              </div>
+              <div className="breakdown-bar-container">
+                <div className="breakdown-bar" style={{width:`${barW}%`,backgroundColor:CATEGORY_COLORS[item.key]}} />
+              </div>
+              <div className="breakdown-amount">
+                <span className="breakdown-chf">{formatCHF(Math.round(item.value))}</span>
+                <span className="breakdown-pct">{pct.toFixed(0)}%</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ===== CONTEXT METRICS =====
+function ContextMetrics({metrics}) {
+  const {monthlySavings, weeksToROI, newMargin}=metrics;
+  const roiText = weeksToROI<8.66
+    ? `Pays for itself in ${Math.max(1,Math.round(weeksToROI))} weeks`
+    : `Pays for itself in ${Math.round(weeksToROI/4.33)} months`;
+  return (
+    <div className="context-metrics">
+      <div className="metric-card">
+        <span className="metric-value">{formatCHF(Math.round(monthlySavings))}</span>
+        <span className="metric-label">saved every month</span>
+      </div>
+      <div className="metric-card">
+        <span className="metric-value">{roiText}</span>
+        <span className="metric-label">fast return on investment</span>
+      </div>
+      <div className="metric-card">
+        <span className="metric-value">{newMargin.toFixed(1)}%</span>
+        <span className="metric-label">potential profit margin (from 5%)</span>
+      </div>
+    </div>
+  );
+}
+
+// ===== RESULTS PANEL =====
+function ResultsPanel({totalAnnualSavings, annualRevenue, breakdown, contextMetrics}) {
+  const animatedTotal=useAnimatedNumber(totalAnnualSavings);
+  return (
+    <div className="results-panel">
+      <div className="total-savings">
+        <span className="total-savings-amount">{formatCHF(animatedTotal)}</span>
+        <span className="total-savings-label">estimated annual savings</span>
+      </div>
+      <p className="revenue-context">Based on estimated revenue of CHF {formatNumber(Math.round(annualRevenue))}/year</p>
+      <BreakdownChart breakdown={breakdown} totalAnnualSavings={totalAnnualSavings} />
+      <ContextMetrics metrics={contextMetrics} />
+      <p className="credibility-line">Estimates based on published research from the National Restaurant Association, Toast, and Focus POS Systems. Conservative assumptions used. Actual results vary.</p>
+    </div>
+  );
+}
+
+// ===== CTA SECTION =====
+function CTASection() {
+  return (
+    <div className="cta-section">
+      <button className="cta-primary" onClick={()=>alert('Demo booking integration point')}>Book a Free Demo</button>
+      <button className="cta-secondary" onClick={()=>alert('Email report integration point')}>Email me this report</button>
+    </div>
+  );
+}
+
+// ===== MAIN CALCULATOR =====
+function Calculator() {
+  const [businessType, setBusinessType] = useState('restaurant');
+  const [tables, setTables] = useState(15);
+  const [avgBill, setAvgBill] = useState(PRESETS.restaurant.avg_bill);
+  const [staff, setStaff] = useState(autoScaleStaff(15, PRESETS.restaurant));
+  const [staffOverridden, setStaffOverridden] = useState(false);
+  const preset = PRESETS[businessType];
+
+  const handleBusinessTypeChange = useCallback((type)=>{
+    const p=PRESETS[type];
+    setBusinessType(type);
+    setAvgBill(p.avg_bill);
+    if(!staffOverridden) setStaff(autoScaleStaff(tables,p));
+  },[tables,staffOverridden]);
+
+  const handleTablesChange = useCallback((t)=>{
+    setTables(t);
+    if(!staffOverridden) setStaff(autoScaleStaff(t,preset));
+  },[preset,staffOverridden]);
+
+  const handleStaffChange = useCallback((v)=>{setStaff(v);setStaffOverridden(true);},[]);
+
+  const results = useMemo(()=>calculateAllSavings({tables,avgBill,staff,preset}),[tables,avgBill,staff,preset]);
+  const contextMetrics = useMemo(()=>calculateContextMetrics(results.totalAnnualSavings,results.annualRevenue),[results]);
+
+  return (
+    <div className="calculator-wrapper">
+      <header className="calculator-header">
+        <h1 className="calculator-headline">How much could your business save with a modern EPOS?</h1>
+        <p className="calculator-subheadline">Move the sliders to see your personalized savings estimate</p>
+      </header>
+      <div className="calculator-body">
+        <InputPanel businessType={businessType} tables={tables} avgBill={avgBill} staff={staff}
+          onBusinessTypeChange={handleBusinessTypeChange} onTablesChange={handleTablesChange}
+          onAvgBillChange={setAvgBill} onStaffChange={handleStaffChange} />
+        <ResultsPanel totalAnnualSavings={results.totalAnnualSavings} annualRevenue={results.annualRevenue}
+          breakdown={results.breakdown} contextMetrics={contextMetrics} />
+      </div>
+      <CTASection />
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<Calculator />);
+  </script>
+</body>
+</html>
