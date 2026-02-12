@@ -139,7 +139,7 @@ export function calculateAllSavings({ tables, avgBill, staff, preset }) {
   return {
     annualRevenue,
     breakdown: [
-      { key: 'upselling', label: 'Upselling & Check Growth', emoji: '\u{1F4C8}', value: upselling },
+      { key: 'upselling', label: 'Higher Avg. Check', emoji: '\u{1F4C8}', value: upselling },
       { key: 'tableTurnover', label: 'Faster Table Turns', emoji: '\u{1F37D}\uFE0F', value: tableTurnover },
       { key: 'laborEfficiency', label: 'Labor & Time Savings', emoji: '\u{1F477}', value: laborEfficiency },
       { key: 'orderAccuracy', label: 'Order Accuracy', emoji: '\u2705', value: orderAccuracy },
