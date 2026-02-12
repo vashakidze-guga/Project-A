@@ -73,8 +73,7 @@ export default function ResultsPanel({
       <ContextMetrics metrics={contextMetrics} />
 
       <p className="credibility-line">
-        Estimates based on published research from the National Restaurant Association,
-        Toast, and Focus POS Systems. Conservative assumptions used. Actual results vary.
+        Estimates based on conservative industry assumptions. Actual results vary by operation.
       </p>
     </div>
   );

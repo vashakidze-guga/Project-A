@@ -5,7 +5,6 @@ const CATEGORY_COLORS = {
   upselling: '#FFE235',
   tableTurnover: '#111825',
   laborEfficiency: '#5D737E',
-  foodWaste: '#E6C800',
   orderAccuracy: '#8A9DA6',
   billingEfficiency: '#C4B000',
 };

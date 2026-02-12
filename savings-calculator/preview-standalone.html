@@ -103,16 +103,16 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
   </div>
 </div>
 <script>
-const C={operating_days:300,hourly_wage:28,working_weeks:50,comp_void_rate:.003,comp_void_reduction:.30,error_reduction:.20,upsell_margin:.65,menu_pct:.003,menu_margin:.70,spoilage_rate:.04,spoilage_red:.15,purch_rate:.02,purch_red:.15,portion_rate:.01,portion_red:.10,min_saved:10,admin_hrs:2,bill_err:.002,bill_red:.50,checkout:.001,epos_cost:2400,base_margin:.05,lg_thresh:5e6,cap_upsell:.008,cap_turn:.006,round:100};
+const C={operating_days:300,hourly_wage:28,working_weeks:50,comp_void_rate:.003,comp_void_reduction:.30,error_reduction:.20,var_overhead:.07,turn_occ_thresh:.80,turn_low_occ:.35,upsell_margin:.65,menu_pct:.003,menu_margin:.70,min_saved:10,admin_frac:.15,bill_err:.002,bill_red:.50,epos_cost:2400,base_margin:.05,lg_thresh:5e6,cap_upsell:.008,cap_turn:.006,ceil_thresh:10e6,ceil_pct:.02,round:100};
 const P={
-restaurant:{label:'Restaurant',icon:'\u{1F37D}\uFE0F',bill:85,turns:2,svc:2,occ:.75,fc:.30,staff20:6,upsell:.010,turn_imp:.010,err:.008},
-cafe:{label:'Caf\u00e9 / Coffee Shop',icon:'\u2615',bill:18,turns:3.5,svc:2,occ:.65,fc:.28,staff20:3,upsell:.007,turn_imp:.008,err:.005},
-bar:{label:'Bar / Nightclub',icon:'\u{1F377}',bill:45,turns:4,svc:1,occ:.70,fc:.22,staff20:5,upsell:.012,turn_imp:.005,err:.010},
-fast_casual:{label:'Fast-Casual / Takeaway',icon:'\u{1F6CD}\uFE0F',bill:22,turns:6,svc:2,occ:.80,fc:.32,staff20:4,upsell:.008,turn_imp:.012,err:.006},
-hotel_restaurant:{label:'Hotel Restaurant',icon:'\u{1F3E8}',bill:120,turns:1.5,svc:2,occ:.65,fc:.30,staff20:8,upsell:.010,turn_imp:.008,err:.008},
-bakery:{label:'Bakery / Patisserie',icon:'\u{1F35E}',bill:12,turns:5,svc:2,occ:.60,fc:.35,staff20:2,upsell:.004,turn_imp:.010,err:.003}
+restaurant:{label:'Restaurant',icon:'\u{1F37D}\uFE0F',bill:85,turns:2,svc:2,occ:.65,fc:.30,staff20:6,admin_hw:12,upsell:.010,turn_imp:.010,err:.008},
+cafe:{label:'Caf\u00e9 / Coffee Shop',icon:'\u2615',bill:22,turns:3.5,svc:2,occ:.65,fc:.28,staff20:3,admin_hw:8,upsell:.007,turn_imp:.008,err:.005},
+bar:{label:'Bar / Nightclub',icon:'\u{1F377}',bill:45,turns:4,svc:1,occ:.70,fc:.22,staff20:5,admin_hw:10,upsell:.012,turn_imp:.005,err:.010},
+fast_casual:{label:'Fast-Casual / Takeaway',icon:'\u{1F6CD}\uFE0F',bill:26,turns:6,svc:2,occ:.72,fc:.32,staff20:4,admin_hw:8,upsell:.008,turn_imp:.012,err:.006},
+hotel_restaurant:{label:'Hotel Restaurant',icon:'\u{1F3E8}',bill:120,turns:1.5,svc:2,occ:.65,fc:.30,staff20:8,admin_hw:15,upsell:.010,turn_imp:.008,err:.008},
+bakery:{label:'Bakery / Patisserie',icon:'\u{1F35E}',bill:12,turns:5,svc:2,occ:.60,fc:.35,staff20:2,admin_hw:6,upsell:.004,turn_imp:.010,err:.003}
 };
-const COLORS={upselling:'#FFE235',tableTurnover:'#111825',labor:'#5D737E',foodWaste:'#E6C800',orderAcc:'#8A9DA6',billing:'#C4B000'};
+const COLORS={upselling:'#FFE235',tableTurnover:'#111825',labor:'#5D737E',orderAcc:'#8A9DA6',billing:'#C4B000'};
 let type='restaurant',tables=15,bill=85,staff=5,staffLocked=false;
 
 function fmt(v){return Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g,"'")}
@@ -127,18 +127,24 @@ function calc(){
   const up=lg?Math.min(p.upsell,C.cap_upsell):p.upsell;
   const ti=lg?Math.min(p.turn_imp,C.cap_turn):p.turn_imp;
   const c1=rev*p.err*C.error_reduction+rev*C.comp_void_rate*C.comp_void_reduction;
-  const c2=rev*ti*(1-p.fc);
+  // Table turnover: variable overhead + occupancy gating
+  const margin=1-p.fc-C.var_overhead;
+  let c2=rev*ti*margin;
+  if(p.occ<C.turn_occ_thresh) c2*=C.turn_low_occ;
   const c3=rev*up*C.upsell_margin+rev*C.menu_pct*C.menu_margin;
-  const fc=rev*p.fc;const c4=p.fc===0?0:fc*C.spoilage_rate*C.spoilage_red+fc*C.purch_rate*C.purch_red+fc*C.portion_rate*C.portion_red;
-  const c5=staff*C.min_saved*(C.hourly_wage/60)*C.operating_days+C.admin_hrs*C.hourly_wage*C.working_weeks;
-  const c6=rev*C.bill_err*C.bill_red+rev*C.checkout;
-  const raw=c1+c2+c3+c4+c5+c6;
+  // Labor: admin scaled by staff via preset admin_hours_week
+  const adminHpw=Math.max(1,Math.min(8,p.admin_hw*C.admin_frac));
+  const c5=staff*C.min_saved*(C.hourly_wage/60)*C.operating_days+adminHpw*C.hourly_wage*C.working_weeks;
+  // Billing: accuracy only (no checkout to avoid double-counting with table turns)
+  const c6=rev*C.bill_err*C.bill_red;
+  let raw=c1+c2+c3+c5+c6;
+  // Hard ceiling for very large operations
+  if(rev>C.ceil_thresh) raw=Math.min(raw,rev*C.ceil_pct);
   const total=Math.round(raw/C.round)*C.round;
   const bd=[
     {k:'upselling',l:'Upselling & Check Growth',e:'\u{1F4C8}',v:c3},
     {k:'tableTurnover',l:'Faster Table Turns',e:'\u{1F37D}\uFE0F',v:c2},
     {k:'labor',l:'Labor & Time Savings',e:'\u{1F477}',v:c5},
-    {k:'foodWaste',l:'Food Waste Reduction',e:'\u{1F957}',v:c4},
     {k:'orderAcc',l:'Order Accuracy',e:'\u2705',v:c1},
     {k:'billing',l:'Billing Efficiency',e:'\u{1F4B3}',v:c6}
   ].filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
@@ -158,7 +164,7 @@ function calc(){
       <div class="mc"><span class="mv">${roi}</span><span class="ml">fast return on investment</span></div>
       <div class="mc"><span class="mv">${nm.toFixed(1)}%</span><span class="ml">potential profit margin (from 5%)</span></div>
     </div>
-    <p class="cred">Estimates based on published research from the National Restaurant Association, Toast, and Focus POS Systems. Conservative assumptions used. Actual results vary.</p>`;
+    <p class="cred">Estimates based on conservative industry assumptions. Actual results vary by operation.</p>`;
 }
 
 // Build type buttons

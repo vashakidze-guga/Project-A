@@ -37,11 +37,21 @@ export function calcOrderAccuracy(annualRevenue, preset) {
 
 /**
  * Category 2: Faster Table Turnover
+ * Gated by occupancy: below 80% occupancy, savings are reduced by 65%
+ * because faster turns only help when there is unmet demand.
+ * Uses variable overhead (7%) in addition to food cost for realistic margin.
  */
 export function calcTableTurnover(annualRevenue, preset) {
   const rates = getEffectiveRates(annualRevenue, preset);
   const extraRevenue = annualRevenue * rates.table_turn_improvement;
-  return extraRevenue * (1 - preset.food_cost_pct);
+  const margin = 1 - preset.food_cost_pct - CONFIG.variable_overhead_pct;
+  let savings = extraRevenue * margin;
+
+  if (preset.occupancy_rate < CONFIG.turnover_occupancy_threshold) {
+    savings *= CONFIG.turnover_low_occ_factor;
+  }
+
+  return savings;
 }
 
 /**
@@ -57,24 +67,9 @@ export function calcUpselling(annualRevenue, preset) {
 }
 
 /**
- * Category 4: Inventory & Food Waste Reduction
- * Returns 0 if food_cost_pct is 0.
- */
-export function calcFoodWaste(annualRevenue, preset) {
-  if (preset.food_cost_pct === 0) return 0;
-
-  const totalFoodCosts = annualRevenue * preset.food_cost_pct;
-  const spoilageSavings =
-    totalFoodCosts * CONFIG.spoilage_rate * CONFIG.spoilage_reduction;
-  const purchasingSavings =
-    totalFoodCosts * CONFIG.purchasing_loss_rate * CONFIG.purchasing_reduction;
-  const portionSavings =
-    totalFoodCosts * CONFIG.portion_loss_rate * CONFIG.portion_reduction;
-  return spoilageSavings + purchasingSavings + portionSavings;
-}
-
-/**
- * Category 5: Labor Efficiency & Time Savings
+ * Category 4: Labor Efficiency & Time Savings
+ * Admin hours scale by staff count: 15% of preset admin_hours_week,
+ * clamped between 1 and 8 hours per week.
  */
 export function calcLaborEfficiency(staff, preset) {
   const fohTimeSavings =
@@ -82,21 +77,23 @@ export function calcLaborEfficiency(staff, preset) {
     CONFIG.daily_minutes_saved_per_staff *
     (CONFIG.hourly_wage / 60) *
     CONFIG.operating_days;
+  const adminHoursPerWeek = Math.max(
+    1,
+    Math.min(8, preset.admin_hours_week * CONFIG.admin_savings_fraction)
+  );
   const adminTimeSavings =
-    CONFIG.admin_hours_saved_per_week *
+    adminHoursPerWeek *
     CONFIG.hourly_wage *
     CONFIG.working_weeks_per_year;
   return fohTimeSavings + adminTimeSavings;
 }
 
 /**
- * Category 6: Payment Processing & Billing Efficiency
+ * Category 5: Payment Processing & Billing Efficiency
+ * Only billing accuracy (no faster-checkout to avoid double-counting with table turns).
  */
 export function calcBillingEfficiency(annualRevenue) {
-  const billingAccuracy =
-    annualRevenue * CONFIG.billing_error_rate * CONFIG.billing_reduction;
-  const fasterCheckout = annualRevenue * CONFIG.checkout_time_saving_pct;
-  return billingAccuracy + fasterCheckout;
+  return annualRevenue * CONFIG.billing_error_rate * CONFIG.billing_reduction;
 }
 
 /**
@@ -121,17 +118,20 @@ export function calculateAllSavings({ tables, avgBill, staff, preset }) {
   const orderAccuracy = calcOrderAccuracy(annualRevenue, preset);
   const tableTurnover = calcTableTurnover(annualRevenue, preset);
   const upselling = calcUpselling(annualRevenue, preset);
-  const foodWaste = calcFoodWaste(annualRevenue, preset);
   const laborEfficiency = calcLaborEfficiency(staff, preset);
   const billingEfficiency = calcBillingEfficiency(annualRevenue);
 
-  const rawTotal =
+  let rawTotal =
     orderAccuracy +
     tableTurnover +
     upselling +
-    foodWaste +
     laborEfficiency +
     billingEfficiency;
+
+  // Hard ceiling: cap savings at 2% of revenue for very large operations
+  if (annualRevenue > CONFIG.savings_ceiling_threshold) {
+    rawTotal = Math.min(rawTotal, annualRevenue * CONFIG.savings_ceiling_pct);
+  }
 
   const totalAnnualSavings =
     Math.round(rawTotal / CONFIG.rounding) * CONFIG.rounding;
@@ -142,7 +142,6 @@ export function calculateAllSavings({ tables, avgBill, staff, preset }) {
       { key: 'upselling', label: 'Upselling & Check Growth', emoji: '\u{1F4C8}', value: upselling },
       { key: 'tableTurnover', label: 'Faster Table Turns', emoji: '\u{1F37D}\uFE0F', value: tableTurnover },
       { key: 'laborEfficiency', label: 'Labor & Time Savings', emoji: '\u{1F477}', value: laborEfficiency },
-      { key: 'foodWaste', label: 'Food Waste Reduction', emoji: '\u{1F957}', value: foodWaste },
       { key: 'orderAccuracy', label: 'Order Accuracy', emoji: '\u2705', value: orderAccuracy },
       { key: 'billingEfficiency', label: 'Billing Efficiency', emoji: '\u{1F4B3}', value: billingEfficiency },
     ].sort((a, b) => b.value - a.value),

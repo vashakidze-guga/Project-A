@@ -115,34 +115,32 @@ const CONFIG = {
   comp_void_rate: 0.003,
   comp_void_reduction: 0.30,
   error_reduction_factor: 0.20,
+  variable_overhead_pct: 0.07,
+  turnover_occupancy_threshold: 0.80,
+  turnover_low_occ_factor: 0.35,
   upsell_margin_rate: 0.65,
   menu_insight_pct: 0.003,
   menu_insight_margin: 0.70,
-  spoilage_rate: 0.04,
-  spoilage_reduction: 0.15,
-  purchasing_loss_rate: 0.02,
-  purchasing_reduction: 0.15,
-  portion_loss_rate: 0.01,
-  portion_reduction: 0.10,
   daily_minutes_saved_per_staff: 10,
-  admin_hours_saved_per_week: 2,
+  admin_savings_fraction: 0.15,
   billing_error_rate: 0.002,
   billing_reduction: 0.50,
-  checkout_time_saving_pct: 0.001,
   assumed_epos_annual_cost: 2400,
   assumed_base_profit_margin: 0.05,
   large_revenue_threshold: 5000000,
   capped_upsell_pct: 0.008,
   capped_table_turn_pct: 0.006,
+  savings_ceiling_threshold: 10000000,
+  savings_ceiling_pct: 0.02,
   rounding: 100,
 };
 
 // ===== PRESETS =====
 const PRESETS = {
-  restaurant:       { label:'Restaurant',           icon:'\u{1F37D}\uFE0F', avg_bill:85,  table_turns:2,   services_per_day:2, occupancy_rate:0.75, food_cost_pct:0.30, staff_per_20_tables:6, admin_hours_week:12, upsell_pct:0.010, table_turn_improvement:0.010, order_error_rate:0.008 },
-  cafe:             { label:'Caf\u00e9 / Coffee Shop', icon:'\u2615',       avg_bill:18,  table_turns:3.5, services_per_day:2, occupancy_rate:0.65, food_cost_pct:0.28, staff_per_20_tables:3, admin_hours_week:8,  upsell_pct:0.007, table_turn_improvement:0.008, order_error_rate:0.005 },
+  restaurant:       { label:'Restaurant',           icon:'\u{1F37D}\uFE0F', avg_bill:85,  table_turns:2,   services_per_day:2, occupancy_rate:0.65, food_cost_pct:0.30, staff_per_20_tables:6, admin_hours_week:12, upsell_pct:0.010, table_turn_improvement:0.010, order_error_rate:0.008 },
+  cafe:             { label:'Caf\u00e9 / Coffee Shop', icon:'\u2615',       avg_bill:22,  table_turns:3.5, services_per_day:2, occupancy_rate:0.65, food_cost_pct:0.28, staff_per_20_tables:3, admin_hours_week:8,  upsell_pct:0.007, table_turn_improvement:0.008, order_error_rate:0.005 },
   bar:              { label:'Bar / Nightclub',       icon:'\u{1F377}',      avg_bill:45,  table_turns:4,   services_per_day:1, occupancy_rate:0.70, food_cost_pct:0.22, staff_per_20_tables:5, admin_hours_week:10, upsell_pct:0.012, table_turn_improvement:0.005, order_error_rate:0.010 },
-  fast_casual:      { label:'Fast-Casual / Takeaway',icon:'\u{1F6CD}\uFE0F',avg_bill:22, table_turns:6,   services_per_day:2, occupancy_rate:0.80, food_cost_pct:0.32, staff_per_20_tables:4, admin_hours_week:8,  upsell_pct:0.008, table_turn_improvement:0.012, order_error_rate:0.006 },
+  fast_casual:      { label:'Fast-Casual / Takeaway',icon:'\u{1F6CD}\uFE0F',avg_bill:26, table_turns:6,   services_per_day:2, occupancy_rate:0.72, food_cost_pct:0.32, staff_per_20_tables:4, admin_hours_week:8,  upsell_pct:0.008, table_turn_improvement:0.012, order_error_rate:0.006 },
   hotel_restaurant: { label:'Hotel Restaurant',      icon:'\u{1F3E8}',      avg_bill:120, table_turns:1.5, services_per_day:2, occupancy_rate:0.65, food_cost_pct:0.30, staff_per_20_tables:8, admin_hours_week:15, upsell_pct:0.010, table_turn_improvement:0.008, order_error_rate:0.008 },
   bakery:           { label:'Bakery / Patisserie',   icon:'\u{1F35E}',      avg_bill:12,  table_turns:5,   services_per_day:2, occupancy_rate:0.60, food_cost_pct:0.35, staff_per_20_tables:2, admin_hours_week:6,  upsell_pct:0.004, table_turn_improvement:0.010, order_error_rate:0.003 },
 };
@@ -164,27 +162,29 @@ function getEffectiveRates(annualRevenue, preset) {
   };
 }
 function calcOrderAccuracy(r, p) { return r*p.order_error_rate*CONFIG.error_reduction_factor + r*CONFIG.comp_void_rate*CONFIG.comp_void_reduction; }
-function calcTableTurnover(r, p) { const e=getEffectiveRates(r,p); return r*e.table_turn_improvement*(1-p.food_cost_pct); }
+function calcTableTurnover(r, p) {
+  const e=getEffectiveRates(r,p);
+  const margin=1-p.food_cost_pct-CONFIG.variable_overhead_pct;
+  let savings=r*e.table_turn_improvement*margin;
+  if(p.occupancy_rate<CONFIG.turnover_occupancy_threshold) savings*=CONFIG.turnover_low_occ_factor;
+  return savings;
+}
 function calcUpselling(r, p) { const e=getEffectiveRates(r,p); return r*e.upsell_pct*CONFIG.upsell_margin_rate + r*CONFIG.menu_insight_pct*CONFIG.menu_insight_margin; }
-function calcFoodWaste(r, p) {
-  if(p.food_cost_pct===0) return 0;
-  const fc=r*p.food_cost_pct;
-  return fc*CONFIG.spoilage_rate*CONFIG.spoilage_reduction + fc*CONFIG.purchasing_loss_rate*CONFIG.purchasing_reduction + fc*CONFIG.portion_loss_rate*CONFIG.portion_reduction;
+function calcLaborEfficiency(staff, preset) {
+  const adminHpw=Math.max(1,Math.min(8,preset.admin_hours_week*CONFIG.admin_savings_fraction));
+  return staff*CONFIG.daily_minutes_saved_per_staff*(CONFIG.hourly_wage/60)*CONFIG.operating_days + adminHpw*CONFIG.hourly_wage*CONFIG.working_weeks_per_year;
 }
-function calcLaborEfficiency(staff) {
-  return staff*CONFIG.daily_minutes_saved_per_staff*(CONFIG.hourly_wage/60)*CONFIG.operating_days + CONFIG.admin_hours_saved_per_week*CONFIG.hourly_wage*CONFIG.working_weeks_per_year;
-}
-function calcBillingEfficiency(r) { return r*CONFIG.billing_error_rate*CONFIG.billing_reduction + r*CONFIG.checkout_time_saving_pct; }
+function calcBillingEfficiency(r) { return r*CONFIG.billing_error_rate*CONFIG.billing_reduction; }
 
 function calculateAllSavings({tables, avgBill, staff, preset}) {
   const annualRevenue = calculateRevenue(tables, avgBill, preset.table_turns, preset.services_per_day, preset.occupancy_rate);
   const orderAccuracy = calcOrderAccuracy(annualRevenue, preset);
   const tableTurnover = calcTableTurnover(annualRevenue, preset);
   const upselling = calcUpselling(annualRevenue, preset);
-  const foodWaste = calcFoodWaste(annualRevenue, preset);
-  const laborEfficiency = calcLaborEfficiency(staff);
+  const laborEfficiency = calcLaborEfficiency(staff, preset);
   const billingEfficiency = calcBillingEfficiency(annualRevenue);
-  const rawTotal = orderAccuracy+tableTurnover+upselling+foodWaste+laborEfficiency+billingEfficiency;
+  let rawTotal = orderAccuracy+tableTurnover+upselling+laborEfficiency+billingEfficiency;
+  if(annualRevenue>CONFIG.savings_ceiling_threshold) rawTotal=Math.min(rawTotal,annualRevenue*CONFIG.savings_ceiling_pct);
   const totalAnnualSavings = Math.round(rawTotal/CONFIG.rounding)*CONFIG.rounding;
   return {
     annualRevenue,
@@ -192,7 +192,6 @@ function calculateAllSavings({tables, avgBill, staff, preset}) {
       {key:'upselling',label:'Upselling & Check Growth',emoji:'\u{1F4C8}',value:upselling},
       {key:'tableTurnover',label:'Faster Table Turns',emoji:'\u{1F37D}\uFE0F',value:tableTurnover},
       {key:'laborEfficiency',label:'Labor & Time Savings',emoji:'\u{1F477}',value:laborEfficiency},
-      {key:'foodWaste',label:'Food Waste Reduction',emoji:'\u{1F957}',value:foodWaste},
       {key:'orderAccuracy',label:'Order Accuracy',emoji:'\u2705',value:orderAccuracy},
       {key:'billingEfficiency',label:'Billing Efficiency',emoji:'\u{1F4B3}',value:billingEfficiency},
     ].sort((a,b)=>b.value-a.value),
@@ -210,7 +209,7 @@ function calculateContextMetrics(total, rev) {
 
 const CATEGORY_COLORS = {
   upselling:'#FFE235', tableTurnover:'#111825', laborEfficiency:'#5D737E',
-  foodWaste:'#E6C800', orderAccuracy:'#8A9DA6', billingEfficiency:'#C4B000',
+  orderAccuracy:'#8A9DA6', billingEfficiency:'#C4B000',
 };
 
 // ===== ANIMATED NUMBER HOOK =====
@@ -349,7 +348,7 @@ function ResultsPanel({totalAnnualSavings, annualRevenue, breakdown, contextMetr
       <p className="revenue-context">Based on estimated revenue of CHF {formatNumber(Math.round(annualRevenue))}/year</p>
       <BreakdownChart breakdown={breakdown} totalAnnualSavings={totalAnnualSavings} />
       <ContextMetrics metrics={contextMetrics} />
-      <p className="credibility-line">Estimates based on published research from the National Restaurant Association, Toast, and Focus POS Systems. Conservative assumptions used. Actual results vary.</p>
+      <p className="credibility-line">Estimates based on conservative industry assumptions. Actual results vary by operation.</p>
     </div>
   );
 }
