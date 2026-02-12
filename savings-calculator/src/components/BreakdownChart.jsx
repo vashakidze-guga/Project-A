@@ -2,12 +2,12 @@ import React from 'react';
 import { formatCHF } from '../utils/formatting.js';
 
 const CATEGORY_COLORS = {
-  upselling: '#4F46E5',
-  tableTurnover: '#0891B2',
-  laborEfficiency: '#059669',
-  foodWaste: '#D97706',
-  orderAccuracy: '#7C3AED',
-  billingEfficiency: '#DC2626',
+  upselling: '#FFE235',
+  tableTurnover: '#111825',
+  laborEfficiency: '#5D737E',
+  foodWaste: '#E6C800',
+  orderAccuracy: '#8A9DA6',
+  billingEfficiency: '#C4B000',
 };
 
 export default function BreakdownChart({ breakdown, totalAnnualSavings }) {

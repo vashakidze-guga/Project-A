@@ -1,16 +1,16 @@
 /* ===== Variables ===== */
 :root {
-  --color-primary: #4F46E5;
-  --color-primary-light: #6366F1;
-  --color-primary-dark: #3730A3;
-  --color-bg: #F9FAFB;
+  --color-primary: #FFE235;
+  --color-primary-light: #FFEB6B;
+  --color-primary-dark: #E6C800;
+  --color-bg: #F7F6E7;
   --color-surface: #FFFFFF;
-  --color-text: #111827;
-  --color-text-secondary: #6B7280;
-  --color-text-muted: #9CA3AF;
-  --color-border: #E5E7EB;
-  --color-track: #E5E7EB;
-  --color-success: #059669;
+  --color-text: #111825;
+  --color-text-secondary: #5D737E;
+  --color-text-muted: #8A9DA6;
+  --color-border: #D8DDD0;
+  --color-track: #D8DDD0;
+  --color-success: #5D737E;
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
@@ -114,14 +114,14 @@ body {
 }
 
 .business-type-card:hover {
-  border-color: var(--color-primary-light);
-  background: #F5F3FF;
+  border-color: var(--color-primary);
+  background: #FFFDE6;
 }
 
 .business-type-card.active {
   border-color: var(--color-primary);
-  background: #EEF2FF;
-  box-shadow: 0 0 0 1px var(--color-primary);
+  background: #FFFACD;
+  box-shadow: 0 0 0 1px var(--color-primary-dark);
 }
 
 .business-type-icon {
@@ -137,7 +137,7 @@ body {
 }
 
 .business-type-card.active .business-type-label {
-  color: var(--color-primary-dark);
+  color: var(--color-text);
   font-weight: 600;
 }
 
@@ -163,7 +163,7 @@ body {
 .slider-value {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--color-primary);
+  color: var(--color-text);
 }
 
 .styled-slider {
@@ -230,7 +230,7 @@ body {
   display: block;
   font-size: 2.8rem;
   font-weight: 800;
-  color: var(--color-primary);
+  color: var(--color-text);
   line-height: 1;
   margin-bottom: 6px;
 }
@@ -384,7 +384,7 @@ body {
   padding: 14px 36px;
   font-size: 1rem;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--color-text);
   background: var(--color-primary);
   border: none;
   border-radius: var(--radius-sm);
@@ -404,9 +404,9 @@ body {
   padding: 14px 36px;
   font-size: 1rem;
   font-weight: 600;
-  color: var(--color-primary);
+  color: var(--color-text);
   background: transparent;
-  border: 2px solid var(--color-primary);
+  border: 2px solid var(--color-text);
   border-radius: var(--radius-sm);
   cursor: pointer;
   transition: all 0.2s ease;
@@ -414,7 +414,7 @@ body {
 }
 
 .cta-secondary:hover {
-  background: #EEF2FF;
+  background: #FFFDE6;
 }
 
 /* ===== Responsive: Mobile ===== */

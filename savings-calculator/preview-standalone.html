@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>EPOS Savings Calculator</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+:root{--pri:#FFE235;--pri-lt:#FFEB6B;--pri-dk:#E6C800;--bg:#F7F6E7;--surface:#FFF;--txt:#111825;--txt2:#5D737E;--txt3:#8A9DA6;--border:#D8DDD0;--track:#D8DDD0;--green:#5D737E;--r-sm:8px;--r-lg:16px;--sh:0 4px 6px -1px rgba(0,0,0,.07),0 2px 4px -1px rgba(0,0,0,.04);--sh-lg:0 10px 25px -3px rgba(0,0,0,.08),0 4px 6px -2px rgba(0,0,0,.03)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--txt);-webkit-font-smoothing:antialiased;line-height:1.5}
+.wrap{max-width:1120px;margin:0 auto;padding:40px 24px 60px}
+.hdr{text-align:center;margin-bottom:40px}
+.hdr h1{font-size:2rem;font-weight:800;line-height:1.2;margin-bottom:8px}
+.hdr p{font-size:1.1rem;color:var(--txt2)}
+.body{display:grid;grid-template-columns:1fr 1fr;gap:32px;align-items:start}
+.panel{background:var(--surface);border-radius:var(--r-lg);padding:28px;box-shadow:var(--sh)}
+.inp{display:flex;flex-direction:column;gap:28px}
+.lbl{display:block;font-size:.85rem;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:12px}
+.btns{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.btn{display:flex;flex-direction:column;align-items:center;gap:4px;padding:12px 6px;border:2px solid var(--border);border-radius:var(--r-sm);background:var(--surface);cursor:pointer;transition:all .2s;font-family:inherit}
+.btn:hover{border-color:var(--pri);background:#FFFDE6}
+.btn.on{border-color:var(--pri);background:#FFFACD;box-shadow:0 0 0 1px var(--pri-dk)}
+.btn .ico{font-size:1.4rem}
+.btn .nm{font-size:.72rem;font-weight:500;color:var(--txt2);text-align:center;line-height:1.2}
+.btn.on .nm{color:var(--txt);font-weight:600}
+.sg{display:flex;flex-direction:column;gap:8px}
+.sh{display:flex;justify-content:space-between;align-items:baseline}
+.sl{font-size:.9rem;font-weight:600}
+.sv{font-size:1.1rem;font-weight:700;color:var(--txt)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:8px;border-radius:4px;outline:none;cursor:pointer}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;border-radius:50%;background:var(--pri);cursor:pointer;border:3px solid #fff;box-shadow:var(--sh)}
+input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;background:var(--pri);cursor:pointer;border:3px solid #fff;box-shadow:var(--sh)}
+.sr{display:flex;justify-content:space-between;font-size:.75rem;color:var(--txt3)}
+.res{display:flex;flex-direction:column;gap:24px}
+.tot{text-align:center;padding:20px 0}
+.tot .am{display:block;font-size:2.8rem;font-weight:800;color:var(--txt);line-height:1;margin-bottom:6px}
+.tot .lb{display:block;font-size:1rem;color:var(--txt2);font-weight:500}
+.rev{text-align:center;font-size:.85rem;color:var(--txt3);margin-top:-16px}
+.bdt{font-size:.85rem;font-weight:600;color:var(--txt2);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+.bars{display:flex;flex-direction:column;gap:10px}
+.row{display:grid;grid-template-columns:160px 1fr 110px;gap:10px;align-items:center}
+.rl{display:flex;align-items:center;gap:6px;min-width:0}
+.re{font-size:.95rem;flex-shrink:0}
+.rn{font-size:.78rem;color:var(--txt2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rbc{height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+.rb{height:100%;border-radius:5px;transition:width .5s cubic-bezier(.4,0,.2,1);min-width:4px}
+.ra{display:flex;align-items:center;gap:6px;justify-content:flex-end}
+.rc{font-size:.8rem;font-weight:600}
+.rp{font-size:.72rem;color:var(--txt3);min-width:28px;text-align:right}
+.mets{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.mc{background:var(--bg);border-radius:var(--r-sm);padding:14px 12px;text-align:center;display:flex;flex-direction:column;gap:4px}
+.mv{font-size:.9rem;font-weight:700;color:var(--green)}
+.ml{font-size:.72rem;color:var(--txt3);line-height:1.3}
+.cred{font-size:.72rem;color:var(--txt3);text-align:center;line-height:1.5;border-top:1px solid var(--border);padding-top:16px}
+.cta{display:flex;justify-content:center;gap:16px;margin-top:40px;flex-wrap:wrap}
+.cta1{padding:14px 36px;font-size:1rem;font-weight:700;color:var(--txt);background:var(--pri);border:none;border-radius:var(--r-sm);cursor:pointer;font-family:inherit;box-shadow:var(--sh)}
+.cta1:hover{background:var(--pri-dk);box-shadow:var(--sh-lg);transform:translateY(-1px)}
+.cta2{padding:14px 36px;font-size:1rem;font-weight:600;color:var(--txt);background:transparent;border:2px solid var(--txt);border-radius:var(--r-sm);cursor:pointer;font-family:inherit}
+.cta2:hover{background:#FFFDE6}
+@media(max-width:768px){
+.wrap{padding:24px 16px 40px}.hdr h1{font-size:1.5rem}.body{grid-template-columns:1fr;gap:24px}
+.btns{gap:6px}.btn{padding:10px 4px}.btn .ico{font-size:1.2rem}.btn .nm{font-size:.65rem}
+.tot .am{font-size:2.2rem}.row{grid-template-columns:120px 1fr 90px;gap:6px}.rn{font-size:.7rem}.rc{font-size:.72rem}
+.mets{grid-template-columns:1fr;gap:8px}.mc{flex-direction:row;justify-content:space-between;text-align:left}
+.cta{flex-direction:column}.cta1,.cta2{width:100%;text-align:center}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hdr">
+    <h1>How much could your business save with a modern EPOS?</h1>
+    <p>Move the sliders to see your personalized savings estimate</p>
+  </header>
+  <div class="body">
+    <div class="panel inp" id="inputs">
+      <div>
+        <label class="lbl">Business Type</label>
+        <div class="btns" id="type-btns"></div>
+      </div>
+      <div class="sg">
+        <div class="sh"><span class="sl">Number of Tables</span><span class="sv" id="v-tables">15</span></div>
+        <input type="range" id="s-tables" min="3" max="80" value="15"/>
+        <div class="sr"><span>3</span><span>80</span></div>
+      </div>
+      <div class="sg">
+        <div class="sh"><span class="sl">Average Bill per Table</span><span class="sv" id="v-bill">CHF 85</span></div>
+        <input type="range" id="s-bill" min="10" max="500" step="5" value="85"/>
+        <div class="sr"><span>CHF 10</span><span>CHF 500</span></div>
+      </div>
+      <div class="sg">
+        <div class="sh"><span class="sl">Number of Staff</span><span class="sv" id="v-staff">5</span></div>
+        <input type="range" id="s-staff" min="1" max="30" value="5"/>
+        <div class="sr"><span>1</span><span>30</span></div>
+      </div>
+    </div>
+    <div class="panel res" id="results"></div>
+  </div>
+  <div class="cta">
+    <button class="cta1">Book a Free Demo</button>
+    <button class="cta2">Email me this report</button>
+  </div>
+</div>
+<script>
+const C={operating_days:300,hourly_wage:28,working_weeks:50,comp_void_rate:.003,comp_void_reduction:.30,error_reduction:.20,upsell_margin:.65,menu_pct:.003,menu_margin:.70,spoilage_rate:.04,spoilage_red:.15,purch_rate:.02,purch_red:.15,portion_rate:.01,portion_red:.10,min_saved:10,admin_hrs:2,bill_err:.002,bill_red:.50,checkout:.001,epos_cost:2400,base_margin:.05,lg_thresh:5e6,cap_upsell:.008,cap_turn:.006,round:100};
+const P={
+restaurant:{label:'Restaurant',icon:'\u{1F37D}\uFE0F',bill:85,turns:2,svc:2,fc:.30,staff20:6,upsell:.012,turn_imp:.010,err:.008},
+cafe:{label:'Caf\u00e9 / Coffee Shop',icon:'\u2615',bill:18,turns:3.5,svc:2,fc:.28,staff20:3,upsell:.008,turn_imp:.008,err:.005},
+bar:{label:'Bar / Nightclub',icon:'\u{1F377}',bill:45,turns:4,svc:1,fc:.22,staff20:5,upsell:.015,turn_imp:.005,err:.010},
+fast_casual:{label:'Fast-Casual / Takeaway',icon:'\u{1F6CD}\uFE0F',bill:22,turns:6,svc:2,fc:.32,staff20:4,upsell:.010,turn_imp:.012,err:.006},
+hotel_restaurant:{label:'Hotel Restaurant',icon:'\u{1F3E8}',bill:120,turns:1.5,svc:2,fc:.30,staff20:8,upsell:.012,turn_imp:.008,err:.008},
+bakery:{label:'Bakery / Patisserie',icon:'\u{1F35E}',bill:12,turns:5,svc:2,fc:.35,staff20:2,upsell:.005,turn_imp:.010,err:.003}
+};
+const COLORS={upselling:'#FFE235',tableTurnover:'#111825',labor:'#5D737E',foodWaste:'#E6C800',orderAcc:'#8A9DA6',billing:'#C4B000'};
+let type='restaurant',tables=15,bill=85,staff=5,staffLocked=false;
+
+function fmt(v){return Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g,"'")}
+function fCHF(v){return'CHF '+fmt(v)}
+function autoStaff(t,p){return Math.max(1,Math.round(t*(p.staff20/20)))}
+function sliderBg(el){const p=((el.value-el.min)/(el.max-el.min))*100;el.style.background=`linear-gradient(to right,var(--pri) ${p}%,var(--track) ${p}%)`}
+
+function calc(){
+  const p=P[type];
+  const rev=tables*bill*p.turns*p.svc*C.operating_days;
+  const lg=rev>C.lg_thresh;
+  const up=lg?Math.min(p.upsell,C.cap_upsell):p.upsell;
+  const ti=lg?Math.min(p.turn_imp,C.cap_turn):p.turn_imp;
+  const c1=rev*p.err*C.error_reduction+rev*C.comp_void_rate*C.comp_void_reduction;
+  const c2=rev*ti*(1-p.fc);
+  const c3=rev*up*C.upsell_margin+rev*C.menu_pct*C.menu_margin;
+  const fc=rev*p.fc;const c4=p.fc===0?0:fc*C.spoilage_rate*C.spoilage_red+fc*C.purch_rate*C.purch_red+fc*C.portion_rate*C.portion_red;
+  const c5=staff*C.min_saved*(C.hourly_wage/60)*C.operating_days+C.admin_hrs*C.hourly_wage*C.working_weeks;
+  const c6=rev*C.bill_err*C.bill_red+rev*C.checkout;
+  const raw=c1+c2+c3+c4+c5+c6;
+  const total=Math.round(raw/C.round)*C.round;
+  const bd=[
+    {k:'upselling',l:'Upselling & Check Growth',e:'\u{1F4C8}',v:c3},
+    {k:'tableTurnover',l:'Faster Table Turns',e:'\u{1F37D}\uFE0F',v:c2},
+    {k:'labor',l:'Labor & Time Savings',e:'\u{1F477}',v:c5},
+    {k:'foodWaste',l:'Food Waste Reduction',e:'\u{1F957}',v:c4},
+    {k:'orderAcc',l:'Order Accuracy',e:'\u2705',v:c1},
+    {k:'billing',l:'Billing Efficiency',e:'\u{1F4B3}',v:c6}
+  ].filter(x=>x.v>0).sort((a,b)=>b.v-a.v);
+  const mo=total/12;const wROI=(C.epos_cost/mo)*4.33;
+  const nm=((rev*C.base_margin+total)/rev)*100;
+  const roi=wROI<8.66?`Pays for itself in ${Math.max(1,Math.round(wROI))} weeks`:`Pays for itself in ${Math.round(wROI/4.33)} months`;
+  const mx=bd[0]?.v||1;
+  document.getElementById('results').innerHTML=`
+    <div class="tot"><span class="am">${fCHF(total)}</span><span class="lb">estimated annual savings</span></div>
+    <p class="rev">Based on estimated revenue of CHF ${fmt(rev)}/year</p>
+    <div><div class="bdt">Savings Breakdown</div><div class="bars">${bd.map(x=>{
+      const bw=(x.v/mx)*100;const pc=(x.v/total)*100;
+      return`<div class="row"><div class="rl"><span class="re">${x.e}</span><span class="rn">${x.l}</span></div><div class="rbc"><div class="rb" style="width:${bw}%;background:${COLORS[x.k]}"></div></div><div class="ra"><span class="rc">${fCHF(x.v)}</span><span class="rp">${pc.toFixed(0)}%</span></div></div>`;
+    }).join('')}</div></div>
+    <div class="mets">
+      <div class="mc"><span class="mv">${fCHF(Math.round(mo))}</span><span class="ml">saved every month</span></div>
+      <div class="mc"><span class="mv">${roi}</span><span class="ml">fast return on investment</span></div>
+      <div class="mc"><span class="mv">${nm.toFixed(1)}%</span><span class="ml">potential profit margin (from 5%)</span></div>
+    </div>
+    <p class="cred">Estimates based on published research from the National Restaurant Association, Toast, and Focus POS Systems. Conservative assumptions used. Actual results vary.</p>`;
+}
+
+// Build type buttons
+const cont=document.getElementById('type-btns');
+Object.entries(P).forEach(([k,v])=>{
+  const b=document.createElement('button');b.className='btn'+(k===type?' on':'');
+  b.innerHTML=`<span class="ico">${v.icon}</span><span class="nm">${v.label}</span>`;
+  b.onclick=()=>{type=k;bill=v.bill;document.getElementById('s-bill').value=bill;document.getElementById('v-bill').textContent='CHF '+fmt(bill);sliderBg(document.getElementById('s-bill'));
+    if(!staffLocked){staff=autoStaff(tables,v);document.getElementById('s-staff').value=staff;document.getElementById('v-staff').textContent=staff;sliderBg(document.getElementById('s-staff'))}
+    cont.querySelectorAll('.btn').forEach((x,i)=>x.className='btn'+(Object.keys(P)[i]===k?' on':''));calc()};
+  cont.appendChild(b);
+});
+
+document.getElementById('s-tables').oninput=function(){tables=+this.value;document.getElementById('v-tables').textContent=tables;sliderBg(this);
+  if(!staffLocked){staff=autoStaff(tables,P[type]);document.getElementById('s-staff').value=staff;document.getElementById('v-staff').textContent=staff;sliderBg(document.getElementById('s-staff'))}calc()};
+document.getElementById('s-bill').oninput=function(){bill=+this.value;document.getElementById('v-bill').textContent='CHF '+fmt(bill);sliderBg(this);calc()};
+document.getElementById('s-staff').oninput=function(){staff=+this.value;staffLocked=true;document.getElementById('v-staff').textContent=staff;sliderBg(this);calc()};
+
+[document.getElementById('s-tables'),document.getElementById('s-bill'),document.getElementById('s-staff')].forEach(sliderBg);
+calc();
+</script>
+</body>
+</html>
