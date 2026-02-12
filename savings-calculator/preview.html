@@ -272,7 +272,7 @@ function InputPanel({businessType, tables, avgBill, staff, onBusinessTypeChange,
           ))}
         </div>
       </div>
-      <Slider label="Number of Tables" value={tables} min={3} max={80} onChange={onTablesChange} />
+      <Slider label={businessType==='fast_casual'?'Number of Tables / Points of Service':'Number of Tables'} value={tables} min={1} max={80} onChange={onTablesChange} />
       <Slider label="Average Bill per Table" value={avgBill} min={10} max={500} step={5} unit="CHF" onChange={onAvgBillChange} />
       <Slider label="Number of Staff" value={staff} min={1} max={30} onChange={onStaffChange} />
     </div>

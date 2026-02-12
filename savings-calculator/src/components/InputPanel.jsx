@@ -70,9 +70,9 @@ export default function InputPanel({
       </div>
 
       <Slider
-        label="Number of Tables"
+        label={businessType === 'fast_casual' ? 'Number of Tables / Points of Service' : 'Number of Tables'}
         value={tables}
-        min={3}
+        min={1}
         max={80}
         onChange={onTablesChange}
       />

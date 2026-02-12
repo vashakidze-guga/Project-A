@@ -80,9 +80,9 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
         <div class="btns" id="type-btns"></div>
       </div>
       <div class="sg">
-        <div class="sh"><span class="sl">Number of Tables</span><span class="sv" id="v-tables">15</span></div>
-        <input type="range" id="s-tables" min="3" max="80" value="15"/>
-        <div class="sr"><span>3</span><span>80</span></div>
+        <div class="sh"><span class="sl" id="l-tables">Number of Tables</span><span class="sv" id="v-tables">15</span></div>
+        <input type="range" id="s-tables" min="1" max="80" value="15"/>
+        <div class="sr"><span>1</span><span>80</span></div>
       </div>
       <div class="sg">
         <div class="sh"><span class="sl">Average Bill per Table</span><span class="sv" id="v-bill">CHF 85</span></div>
@@ -167,6 +167,8 @@ function calc(){
     <p class="cred">Estimates based on conservative industry assumptions. Actual results vary by operation.</p>`;
 }
 
+function updateTablesLabel(){document.getElementById('l-tables').textContent=type==='fast_casual'?'Number of Tables / Points of Service':'Number of Tables'}
+
 // Build type buttons
 const cont=document.getElementById('type-btns');
 Object.entries(P).forEach(([k,v])=>{
@@ -174,7 +176,7 @@ Object.entries(P).forEach(([k,v])=>{
   b.innerHTML=`<span class="ico">${v.icon}</span><span class="nm">${v.label}</span>`;
   b.onclick=()=>{type=k;bill=v.bill;document.getElementById('s-bill').value=bill;document.getElementById('v-bill').textContent='CHF '+fmt(bill);sliderBg(document.getElementById('s-bill'));
     if(!staffLocked){staff=autoStaff(tables,v);document.getElementById('s-staff').value=staff;document.getElementById('v-staff').textContent=staff;sliderBg(document.getElementById('s-staff'))}
-    cont.querySelectorAll('.btn').forEach((x,i)=>x.className='btn'+(Object.keys(P)[i]===k?' on':''));calc()};
+    cont.querySelectorAll('.btn').forEach((x,i)=>x.className='btn'+(Object.keys(P)[i]===k?' on':''));updateTablesLabel();calc()};
   cont.appendChild(b);
 });
 
