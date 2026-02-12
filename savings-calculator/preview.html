@@ -139,12 +139,12 @@ const CONFIG = {
 
 // ===== PRESETS =====
 const PRESETS = {
-  restaurant:       { label:'Restaurant',           icon:'\u{1F37D}\uFE0F', avg_bill:85,  table_turns:2,   services_per_day:2, food_cost_pct:0.30, staff_per_20_tables:6, admin_hours_week:12, upsell_pct:0.012, table_turn_improvement:0.010, order_error_rate:0.008 },
-  cafe:             { label:'Caf\u00e9 / Coffee Shop', icon:'\u2615',       avg_bill:18,  table_turns:3.5, services_per_day:2, food_cost_pct:0.28, staff_per_20_tables:3, admin_hours_week:8,  upsell_pct:0.008, table_turn_improvement:0.008, order_error_rate:0.005 },
-  bar:              { label:'Bar / Nightclub',       icon:'\u{1F377}',      avg_bill:45,  table_turns:4,   services_per_day:1, food_cost_pct:0.22, staff_per_20_tables:5, admin_hours_week:10, upsell_pct:0.015, table_turn_improvement:0.005, order_error_rate:0.010 },
-  fast_casual:      { label:'Fast-Casual / Takeaway',icon:'\u{1F6CD}\uFE0F',avg_bill:22, table_turns:6,   services_per_day:2, food_cost_pct:0.32, staff_per_20_tables:4, admin_hours_week:8,  upsell_pct:0.010, table_turn_improvement:0.012, order_error_rate:0.006 },
-  hotel_restaurant: { label:'Hotel Restaurant',      icon:'\u{1F3E8}',      avg_bill:120, table_turns:1.5, services_per_day:2, food_cost_pct:0.30, staff_per_20_tables:8, admin_hours_week:15, upsell_pct:0.012, table_turn_improvement:0.008, order_error_rate:0.008 },
-  bakery:           { label:'Bakery / Patisserie',   icon:'\u{1F35E}',      avg_bill:12,  table_turns:5,   services_per_day:2, food_cost_pct:0.35, staff_per_20_tables:2, admin_hours_week:6,  upsell_pct:0.005, table_turn_improvement:0.010, order_error_rate:0.003 },
+  restaurant:       { label:'Restaurant',           icon:'\u{1F37D}\uFE0F', avg_bill:85,  table_turns:2,   services_per_day:2, occupancy_rate:0.75, food_cost_pct:0.30, staff_per_20_tables:6, admin_hours_week:12, upsell_pct:0.010, table_turn_improvement:0.010, order_error_rate:0.008 },
+  cafe:             { label:'Caf\u00e9 / Coffee Shop', icon:'\u2615',       avg_bill:18,  table_turns:3.5, services_per_day:2, occupancy_rate:0.65, food_cost_pct:0.28, staff_per_20_tables:3, admin_hours_week:8,  upsell_pct:0.007, table_turn_improvement:0.008, order_error_rate:0.005 },
+  bar:              { label:'Bar / Nightclub',       icon:'\u{1F377}',      avg_bill:45,  table_turns:4,   services_per_day:1, occupancy_rate:0.70, food_cost_pct:0.22, staff_per_20_tables:5, admin_hours_week:10, upsell_pct:0.012, table_turn_improvement:0.005, order_error_rate:0.010 },
+  fast_casual:      { label:'Fast-Casual / Takeaway',icon:'\u{1F6CD}\uFE0F',avg_bill:22, table_turns:6,   services_per_day:2, occupancy_rate:0.80, food_cost_pct:0.32, staff_per_20_tables:4, admin_hours_week:8,  upsell_pct:0.008, table_turn_improvement:0.012, order_error_rate:0.006 },
+  hotel_restaurant: { label:'Hotel Restaurant',      icon:'\u{1F3E8}',      avg_bill:120, table_turns:1.5, services_per_day:2, occupancy_rate:0.65, food_cost_pct:0.30, staff_per_20_tables:8, admin_hours_week:15, upsell_pct:0.010, table_turn_improvement:0.008, order_error_rate:0.008 },
+  bakery:           { label:'Bakery / Patisserie',   icon:'\u{1F35E}',      avg_bill:12,  table_turns:5,   services_per_day:2, occupancy_rate:0.60, food_cost_pct:0.35, staff_per_20_tables:2, admin_hours_week:6,  upsell_pct:0.004, table_turn_improvement:0.010, order_error_rate:0.003 },
 };
 const BUSINESS_TYPES = Object.keys(PRESETS);
 
@@ -153,8 +153,8 @@ function formatCHF(v) { return `CHF ${Math.round(v).toString().replace(/\B(?=(\d
 function formatNumber(v) { return Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g,"'"); }
 
 // ===== CALCULATIONS =====
-function calculateRevenue(tables, avgBill, tableTurns, servicesPerDay) {
-  return tables * avgBill * tableTurns * servicesPerDay * CONFIG.operating_days;
+function calculateRevenue(tables, avgBill, tableTurns, servicesPerDay, occupancyRate) {
+  return tables * avgBill * tableTurns * servicesPerDay * CONFIG.operating_days * occupancyRate;
 }
 function getEffectiveRates(annualRevenue, preset) {
   const isLarge = annualRevenue > CONFIG.large_revenue_threshold;
@@ -177,7 +177,7 @@ function calcLaborEfficiency(staff) {
 function calcBillingEfficiency(r) { return r*CONFIG.billing_error_rate*CONFIG.billing_reduction + r*CONFIG.checkout_time_saving_pct; }
 
 function calculateAllSavings({tables, avgBill, staff, preset}) {
-  const annualRevenue = calculateRevenue(tables, avgBill, preset.table_turns, preset.services_per_day);
+  const annualRevenue = calculateRevenue(tables, avgBill, preset.table_turns, preset.services_per_day, preset.occupancy_rate);
   const orderAccuracy = calcOrderAccuracy(annualRevenue, preset);
   const tableTurnover = calcTableTurnover(annualRevenue, preset);
   const upselling = calcUpselling(annualRevenue, preset);

@@ -105,12 +105,12 @@ input[type=range]::-moz-range-thumb{width:22px;height:22px;border-radius:50%;bac
 <script>
 const C={operating_days:300,hourly_wage:28,working_weeks:50,comp_void_rate:.003,comp_void_reduction:.30,error_reduction:.20,upsell_margin:.65,menu_pct:.003,menu_margin:.70,spoilage_rate:.04,spoilage_red:.15,purch_rate:.02,purch_red:.15,portion_rate:.01,portion_red:.10,min_saved:10,admin_hrs:2,bill_err:.002,bill_red:.50,checkout:.001,epos_cost:2400,base_margin:.05,lg_thresh:5e6,cap_upsell:.008,cap_turn:.006,round:100};
 const P={
-restaurant:{label:'Restaurant',icon:'\u{1F37D}\uFE0F',bill:85,turns:2,svc:2,fc:.30,staff20:6,upsell:.012,turn_imp:.010,err:.008},
-cafe:{label:'Caf\u00e9 / Coffee Shop',icon:'\u2615',bill:18,turns:3.5,svc:2,fc:.28,staff20:3,upsell:.008,turn_imp:.008,err:.005},
-bar:{label:'Bar / Nightclub',icon:'\u{1F377}',bill:45,turns:4,svc:1,fc:.22,staff20:5,upsell:.015,turn_imp:.005,err:.010},
-fast_casual:{label:'Fast-Casual / Takeaway',icon:'\u{1F6CD}\uFE0F',bill:22,turns:6,svc:2,fc:.32,staff20:4,upsell:.010,turn_imp:.012,err:.006},
-hotel_restaurant:{label:'Hotel Restaurant',icon:'\u{1F3E8}',bill:120,turns:1.5,svc:2,fc:.30,staff20:8,upsell:.012,turn_imp:.008,err:.008},
-bakery:{label:'Bakery / Patisserie',icon:'\u{1F35E}',bill:12,turns:5,svc:2,fc:.35,staff20:2,upsell:.005,turn_imp:.010,err:.003}
+restaurant:{label:'Restaurant',icon:'\u{1F37D}\uFE0F',bill:85,turns:2,svc:2,occ:.75,fc:.30,staff20:6,upsell:.010,turn_imp:.010,err:.008},
+cafe:{label:'Caf\u00e9 / Coffee Shop',icon:'\u2615',bill:18,turns:3.5,svc:2,occ:.65,fc:.28,staff20:3,upsell:.007,turn_imp:.008,err:.005},
+bar:{label:'Bar / Nightclub',icon:'\u{1F377}',bill:45,turns:4,svc:1,occ:.70,fc:.22,staff20:5,upsell:.012,turn_imp:.005,err:.010},
+fast_casual:{label:'Fast-Casual / Takeaway',icon:'\u{1F6CD}\uFE0F',bill:22,turns:6,svc:2,occ:.80,fc:.32,staff20:4,upsell:.008,turn_imp:.012,err:.006},
+hotel_restaurant:{label:'Hotel Restaurant',icon:'\u{1F3E8}',bill:120,turns:1.5,svc:2,occ:.65,fc:.30,staff20:8,upsell:.010,turn_imp:.008,err:.008},
+bakery:{label:'Bakery / Patisserie',icon:'\u{1F35E}',bill:12,turns:5,svc:2,occ:.60,fc:.35,staff20:2,upsell:.004,turn_imp:.010,err:.003}
 };
 const COLORS={upselling:'#FFE235',tableTurnover:'#111825',labor:'#5D737E',foodWaste:'#E6C800',orderAcc:'#8A9DA6',billing:'#C4B000'};
 let type='restaurant',tables=15,bill=85,staff=5,staffLocked=false;
@@ -122,7 +122,7 @@ function sliderBg(el){const p=((el.value-el.min)/(el.max-el.min))*100;el.style.b
 
 function calc(){
   const p=P[type];
-  const rev=tables*bill*p.turns*p.svc*C.operating_days;
+  const rev=tables*bill*p.turns*p.svc*C.operating_days*p.occ;
   const lg=rev>C.lg_thresh;
   const up=lg?Math.min(p.upsell,C.cap_upsell):p.upsell;
   const ti=lg?Math.min(p.turn_imp,C.cap_turn):p.turn_imp;

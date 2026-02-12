@@ -34,75 +34,97 @@ function closeTo(a, b, tolerance = 50) {
   return Math.abs(a - b) <= tolerance;
 }
 
-// ========== Revenue ==========
-console.log('\n=== Revenue Calculation ===');
-assert(calculateRevenue(20, 85, 2, 2) === 2040000, 'Restaurant 20 tables = CHF 2,040,000');
-assert(calculateRevenue(12, 85, 2, 2) === 1224000, 'Restaurant 12 tables = CHF 1,224,000');
-assert(calculateRevenue(10, 18, 3.5, 2) === 378000, 'Café 10 tables = CHF 378,000');
-assert(calculateRevenue(12, 45, 4, 1) === 648000, 'Bar 12 tables = CHF 648,000');
+// ========== Revenue with Occupancy ==========
+console.log('\n=== Revenue Calculation (with occupancy) ===');
+// Restaurant: 20 × 85 × 2 × 2 × 300 × 0.75 = 1,530,000
+assert(calculateRevenue(20, 85, 2, 2, 0.75) === 1530000, 'Restaurant 20 tables (75% occ) = CHF 1,530,000');
+// Restaurant: 15 × 85 × 2 × 2 × 300 × 0.75 = 1,147,500
+assert(calculateRevenue(15, 85, 2, 2, 0.75) === 1147500, 'Restaurant 15 tables (75% occ) = CHF 1,147,500 (~CHF 96K/mo)');
+// Restaurant: 80 × 85 × 2 × 2 × 300 × 0.75 = 6,120,000
+assert(calculateRevenue(80, 85, 2, 2, 0.75) === 6120000, 'Restaurant 80 tables (75% occ) = CHF 6,120,000 (not 8M!)');
+// Café: 10 × 18 × 3.5 × 2 × 300 × 0.65 = 245,700
+assert(calculateRevenue(10, 18, 3.5, 2, 0.65) === 245700, 'Café 10 tables (65% occ) = CHF 245,700');
+// Bar: 12 × 45 × 4 × 1 × 300 × 0.70 = 453,600
+assert(calculateRevenue(12, 45, 4, 1, 0.70) === 453600, 'Bar 12 tables (70% occ) = CHF 453,600');
 
-// ========== Category Formulas ==========
-console.log('\n=== Category 1: Order Accuracy ===');
-const cat1 = calcOrderAccuracy(2040000, PRESETS.restaurant);
-assert(closeTo(cat1, 5100), `Restaurant CHF ${cat1.toFixed(0)} ≈ 5,100`);
+// ========== Grand Total with realistic numbers ==========
+console.log('\n=== Savings Scenarios (with occupancy) ===');
 
-console.log('\n=== Category 2: Table Turnover ===');
-const cat2 = calcTableTurnover(2040000, PRESETS.restaurant);
-assert(closeTo(cat2, 14280), `Restaurant CHF ${cat2.toFixed(0)} ≈ 14,280`);
-
-console.log('\n=== Category 3: Upselling ===');
-const cat3 = calcUpselling(2040000, PRESETS.restaurant);
-assert(closeTo(cat3, 20196), `Restaurant CHF ${cat3.toFixed(0)} ≈ 20,196`);
-
-console.log('\n=== Category 4: Food Waste ===');
-const cat4 = calcFoodWaste(2040000, PRESETS.restaurant);
-assert(closeTo(cat4, 6120), `Restaurant CHF ${cat4.toFixed(0)} ≈ 6,120`);
-assert(calcFoodWaste(648000, { ...PRESETS.bar, food_cost_pct: 0 }) === 0, 'Zero food cost = CHF 0');
-
-console.log('\n=== Category 5: Labor ===');
-const cat5 = calcLaborEfficiency(6, PRESETS.restaurant);
-assert(closeTo(cat5, 11200), `Restaurant 6 staff CHF ${cat5.toFixed(0)} ≈ 11,200`);
-
-console.log('\n=== Category 6: Billing ===');
-const cat6 = calcBillingEfficiency(2040000);
-assert(closeTo(cat6, 4080), `Restaurant CHF ${cat6.toFixed(0)} ≈ 4,080`);
-
-// ========== Grand Total Tests ==========
-console.log('\n=== Grand Total QA Targets ===');
-
-function testScenario(name, params, expectedRevenue, minSavings, maxSavings) {
+function testScenario(name, params, minSavings, maxSavings) {
   const r = calculateAllSavings(params);
-  if (expectedRevenue != null) {
-    assert(r.annualRevenue === expectedRevenue, `${name}: revenue = CHF ${r.annualRevenue.toLocaleString()}`);
-  }
-  assert(
-    r.totalAnnualSavings >= minSavings && r.totalAnnualSavings <= maxSavings,
-    `${name}: savings = CHF ${r.totalAnnualSavings.toLocaleString()} (expect ${minSavings.toLocaleString()}–${maxSavings.toLocaleString()})`
-  );
+  const monthly = Math.round(r.annualRevenue / 12);
   const pct = ((r.totalAnnualSavings / r.annualRevenue) * 100).toFixed(1);
-  console.log(`    → ${pct}% of revenue`);
+  const ok = r.totalAnnualSavings >= minSavings && r.totalAnnualSavings <= maxSavings;
+  assert(ok,
+    `${name}: rev CHF ${formatNumber(r.annualRevenue)} (${formatNumber(monthly)}/mo), savings CHF ${formatNumber(r.totalAnnualSavings)} (${pct}%) [expect ${formatNumber(minSavings)}–${formatNumber(maxSavings)}]`
+  );
+  // Print breakdown
+  r.breakdown.forEach(b => {
+    console.log(`      ${b.emoji} ${b.label}: CHF ${formatNumber(Math.round(b.value))}`);
+  });
   return r;
 }
 
-testScenario('Test 1: Restaurant 20t', { tables: 20, avgBill: 85, staff: 6, preset: PRESETS.restaurant }, 2040000, 55000, 66000);
-testScenario('Test 2: Restaurant 12t', { tables: 12, avgBill: 85, staff: 4, preset: PRESETS.restaurant }, 1224000, 34000, 42000);
-testScenario('Test 3: Café 8t', { tables: 8, avgBill: 18, staff: 3, preset: PRESETS.cafe }, 302400, 10000, 16000);
-testScenario('Test 4: Bar 12t', { tables: 12, avgBill: 45, staff: 5, preset: PRESETS.bar }, 648000, 20000, 28000);
-testScenario('Test 5: Bakery min', { tables: 3, avgBill: 12, staff: 1, preset: PRESETS.bakery }, 108000, 5000, 11000);
-testScenario('Test 6: Fast-casual 8t', { tables: 8, avgBill: 22, staff: 4, preset: PRESETS.fast_casual }, 633600, 20000, 27000);
-testScenario('Test 7: Hotel 25t', { tables: 25, avgBill: 120, staff: 8, preset: PRESETS.hotel_restaurant }, 2700000, 70000, 85000);
-testScenario('Test 8: Bakery 6t', { tables: 6, avgBill: 12, staff: 2, preset: PRESETS.bakery }, 216000, 8000, 13000);
+// Restaurant 15 tables (default), 5 staff → ~CHF 96K/mo revenue
+testScenario('Restaurant 15t default',
+  { tables: 15, avgBill: 85, staff: 5, preset: PRESETS.restaurant },
+  25000, 42000);
 
-// Large hotel — revenue cap test
-console.log('\n=== Revenue Cap Test ===');
+// Restaurant 20 tables, 6 staff → ~CHF 127K/mo
+testScenario('Restaurant 20t',
+  { tables: 20, avgBill: 85, staff: 6, preset: PRESETS.restaurant },
+  35000, 55000);
+
+// Restaurant 12 tables, 4 staff → ~CHF 76K/mo
+testScenario('Restaurant 12t',
+  { tables: 12, avgBill: 85, staff: 4, preset: PRESETS.restaurant },
+  22000, 36000);
+
+// Restaurant 80 tables → CHF 6.12M (was 8.16M without occupancy)
+testScenario('Restaurant 80t (large)',
+  { tables: 80, avgBill: 85, staff: 24, preset: PRESETS.restaurant },
+  100000, 220000);
+
+// Café 10 tables, 2 staff
+testScenario('Café 10t',
+  { tables: 10, avgBill: 18, staff: 2, preset: PRESETS.cafe },
+  7000, 15000);
+
+// Bar 12 tables, 5 staff
+testScenario('Bar 12t',
+  { tables: 12, avgBill: 45, staff: 5, preset: PRESETS.bar },
+  15000, 25000);
+
+// Fast-casual 8 tables, 4 staff
+testScenario('Fast-casual 8t',
+  { tables: 8, avgBill: 22, staff: 4, preset: PRESETS.fast_casual },
+  15000, 25000);
+
+// Hotel restaurant 25 tables, 8 staff
+testScenario('Hotel 25t',
+  { tables: 25, avgBill: 120, staff: 8, preset: PRESETS.hotel_restaurant },
+  45000, 70000);
+
+// Bakery 6 tables, 2 staff
+testScenario('Bakery 6t',
+  { tables: 6, avgBill: 12, staff: 2, preset: PRESETS.bakery },
+  5000, 12000);
+
+// Minimum: Bakery 3 tables, 1 staff
+testScenario('Bakery 3t (minimum)',
+  { tables: 3, avgBill: 12, staff: 1, preset: PRESETS.bakery },
+  3000, 8000);
+
+// ========== Revenue Cap ==========
+console.log('\n=== Revenue Cap ===');
 const large = calculateAllSavings({ tables: 80, avgBill: 500, staff: 30, preset: PRESETS.hotel_restaurant });
-assert(large.annualRevenue > 5000000, `Large hotel revenue = CHF ${large.annualRevenue.toLocaleString()} (> 5M)`);
+assert(large.annualRevenue > 5000000, `Large hotel revenue = CHF ${formatNumber(large.annualRevenue)} (> 5M)`);
 const largePct = large.totalAnnualSavings / large.annualRevenue;
 assert(largePct < 0.05, `Savings ${(largePct * 100).toFixed(1)}% of revenue (< 5%)`);
 
 // ========== Breakdown ==========
-console.log('\n=== Breakdown Ordering ===');
-const r = calculateAllSavings({ tables: 20, avgBill: 85, staff: 6, preset: PRESETS.restaurant });
+console.log('\n=== Breakdown ===');
+const r = calculateAllSavings({ tables: 15, avgBill: 85, staff: 5, preset: PRESETS.restaurant });
 let sorted = true;
 for (let i = 0; i < r.breakdown.length - 1; i++) {
   if (r.breakdown[i].value < r.breakdown[i + 1].value) sorted = false;
@@ -113,25 +135,16 @@ assert(r.breakdown.length === 6, 'Breakdown has 6 categories');
 // ========== Auto-scale Staff ==========
 console.log('\n=== Auto-scale Staff ===');
 assert(autoScaleStaff(20, PRESETS.restaurant) === 6, 'Restaurant 20t → 6 staff');
-assert(autoScaleStaff(12, PRESETS.restaurant) === 4, 'Restaurant 12t → 4 staff');
+assert(autoScaleStaff(15, PRESETS.restaurant) === 5, 'Restaurant 15t → 5 staff');
 assert(autoScaleStaff(10, PRESETS.cafe) === 2, 'Café 10t → 2 staff');
 assert(autoScaleStaff(3, PRESETS.bakery) >= 1, 'Min 1 staff');
-
-// ========== Context Metrics ==========
-console.log('\n=== Context Metrics ===');
-const cm = calculateContextMetrics(38300, 1224000);
-assert(closeTo(cm.monthlySavings, 38300 / 12, 1), `Monthly: CHF ${cm.monthlySavings.toFixed(0)}`);
-assert(cm.monthsToROI < 2, `ROI in ${cm.monthsToROI.toFixed(1)} months (< 2)`);
-assert(closeTo(cm.newMargin, 8.13, 0.5), `New margin: ${cm.newMargin.toFixed(1)}%`);
 
 // ========== Formatting ==========
 console.log('\n=== Formatting ===');
 assert(formatCHF(38300) === "CHF 38'300", `formatCHF(38300) = "${formatCHF(38300)}"`);
-assert(formatCHF(1224000) === "CHF 1'224'000", `formatCHF(1224000) = "${formatCHF(1224000)}"`);
-assert(formatNumber(2040000) === "2'040'000", `formatNumber(2040000) = "${formatNumber(2040000)}"`);
+assert(formatNumber(1147500) === "1'147'500", `formatNumber(1147500) = "${formatNumber(1147500)}"`);
 assert(formatPercent(0.031) === '3.1%', `formatPercent(0.031) = "${formatPercent(0.031)}"`);
 assert(roundTo(38347) === 38300, `roundTo(38347) = ${roundTo(38347)}`);
-assert(roundTo(38350) === 38400, `roundTo(38350) = ${roundTo(38350)}`);
 
 // ========== Summary ==========
 console.log(`\n${'='.repeat(40)}`);

@@ -2,9 +2,11 @@ import { CONFIG } from '../config/constants.js';
 
 /**
  * Calculate annual revenue from inputs and preset parameters.
+ * Includes occupancy rate to account for empty tables during
+ * off-peak hours, time between seatings, and slow periods.
  */
-export function calculateRevenue(tables, avgBill, tableTurns, servicesPerDay) {
-  return tables * avgBill * tableTurns * servicesPerDay * CONFIG.operating_days;
+export function calculateRevenue(tables, avgBill, tableTurns, servicesPerDay, occupancyRate) {
+  return tables * avgBill * tableTurns * servicesPerDay * CONFIG.operating_days * occupancyRate;
 }
 
 /**
@@ -112,7 +114,8 @@ export function calculateAllSavings({ tables, avgBill, staff, preset }) {
     tables,
     avgBill,
     preset.table_turns,
-    preset.services_per_day
+    preset.services_per_day,
+    preset.occupancy_rate
   );
 
   const orderAccuracy = calcOrderAccuracy(annualRevenue, preset);
