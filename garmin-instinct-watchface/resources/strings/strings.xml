@@ -1,0 +1,5 @@
+<strings>
+    <string id="AppName">Instinct Custom</string>
+    <string id="ShowSecondsInSleepTitle">Show seconds when the watch is asleep (uses more battery)</string>
+    <string id="DarkBackgroundTitle">Dark background</string>
+</strings>

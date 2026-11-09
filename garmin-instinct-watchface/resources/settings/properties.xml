@@ -1,0 +1,4 @@
+<properties>
+    <property id="ShowSecondsInSleep" type="boolean">false</property>
+    <property id="DarkBackground" type="boolean">true</property>
+</properties>

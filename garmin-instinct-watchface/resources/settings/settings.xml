@@ -1,0 +1,8 @@
+<settings>
+    <setting propertyKey="@Properties.ShowSecondsInSleep" title="@Strings.ShowSecondsInSleepTitle">
+        <settingConfig type="boolean"/>
+    </setting>
+    <setting propertyKey="@Properties.DarkBackground" title="@Strings.DarkBackgroundTitle">
+        <settingConfig type="boolean"/>
+    </setting>
+</settings>

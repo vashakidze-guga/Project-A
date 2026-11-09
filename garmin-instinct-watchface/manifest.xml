@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<iq:manifest xmlns:iq="http://www.garmin.com/xml/connectiq" version="3">
+    <!--
+        Watch face for the Garmin Instinct family.
+        If the compiler rejects a product id below, run
+        "Monkey C: Edit Products" in VS Code to pick devices from your SDK.
+    -->
+    <iq:application entry="InstinctFaceApp"
+                    id="b9a6b2f3a44c4961a76f62963b2b032b"
+                    launcherIcon="@Drawables.LauncherIcon"
+                    minApiLevel="3.3.0"
+                    name="@Strings.AppName"
+                    type="watchface"
+                    version="1.0.0">
+        <iq:products>
+            <!-- MIP (monochrome) models with a round sub-screen -->
+            <iq:product id="instinct2"/>
+            <iq:product id="instinct2s"/>
+            <iq:product id="instinct2x"/>
+            <iq:product id="instinct3solar45mm"/>
+            <iq:product id="instincte40mm"/>
+            <iq:product id="instincte45mm"/>
+            <!-- Models without a sub-screen -->
+            <iq:product id="instinctcrossover"/>
+            <iq:product id="instinct3amoled45mm"/>
+            <iq:product id="instinct3amoled50mm"/>
+        </iq:products>
+        <iq:permissions/>
+        <iq:languages>
+            <iq:language>eng</iq:language>
+        </iq:languages>
+        <iq:barrels/>
+    </iq:application>
+</iq:manifest>
