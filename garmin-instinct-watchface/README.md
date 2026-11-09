@@ -30,6 +30,27 @@ by editing one function in `source/InstinctFaceView.mc`.
 Supported models are listed in `manifest.xml`: Instinct 2 / 2S / 2X,
 Instinct 3 Solar, Instinct E, Instinct Crossover, Instinct 3 AMOLED.
 
+## Which Instinct do I have?
+
+Only Instinct models from the second generation onwards run Connect IQ.
+Check the name under **Settings > System > About** on the watch (or in the
+Garmin Connect app under your devices):
+
+| Name on the watch                              | Connect IQ | Device id to build for     |
+|------------------------------------------------|------------|----------------------------|
+| Instinct, Instinct Solar, Tactical, Esports (2018-2021) | **No**  | none, this project cannot be installed |
+| Instinct 2, Instinct 2 Solar, Dual Power, dezl  | Yes        | `instinct2`                |
+| Instinct 2S, Instinct 2S Solar                  | Yes        | `instinct2s`               |
+| Instinct 2X Solar                               | Yes        | `instinct2x`               |
+| Instinct Crossover                              | Yes        | `instinctcrossover`        |
+| Instinct E 40mm / 45mm                          | Yes        | `instincte40mm` / `instincte45mm` |
+| Instinct 3 Solar 45mm / 50mm                    | Yes        | `instinct3solar45mm` (covers both sizes) |
+| Instinct 3 AMOLED 45mm / 50mm                   | Yes        | `instinct3amoled45mm` / `instinct3amoled50mm` |
+
+The first-generation Instinct Solar has a 128 x 128 screen and no Connect IQ
+support, so its only customisation is the built-in watch-face editor on the
+watch (hold **MENU**, choose **Watch Face**, then **Customize**).
+
 ## Build it
 
 1. Install the [Connect IQ SDK Manager](https://developer.garmin.com/connect-iq/sdk/)
